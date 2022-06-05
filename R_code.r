@@ -1,3 +1,4 @@
+fpath <- ur_data_path
 adm <- read.csv(fpath, sep=",", na.strings="")
 accept_or_reject <- adm[adm$decision=="Accepted" | adm$decision=="Rejected",]
 has_gpa = subset(accept_or_reject, !is.na(accept_or_reject$gpa))
