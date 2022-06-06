@@ -61,16 +61,22 @@ train_data=subset(adm,sample==TRUE)
 test_data=subset(adm,sample==FALSE)
 
 # Random Forest 
-#install.packages("randomForest")
+install.packages("randomForest")
 library(randomForest)
+rf_model <- randomForest(admit ~., data = train_data, importance=TRUE)
+rf_model
+importance(rf_model)
+
 
 
 # Multiple Linear Regression
 # Let's try to do linear regression modeling using admit as the target
 # variable 
-
-model1 <- lm(admit ~., train_data)
+install.packages("modelr")
+library(modelr)
+model1 <- lm(admit ~., data=train_data)
 summary(model1)
+mae(model1, data = train_data)
 
 # Interpretation 
 # The p-value of SOP and GPA are more than 0.05, making them 
@@ -78,8 +84,10 @@ summary(model1)
 # chance of getting admitted. 
 
 
-
-
+# Logistic Regression 
+library(MASS)
+lr.fit <- glm(adm)
+summary(lr.fit)
 
 
 
