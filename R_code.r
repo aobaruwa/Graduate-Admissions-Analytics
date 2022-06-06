@@ -8,7 +8,7 @@ has_degree = subset(am_intl, !is.na(am_intl$degree))
 all_three_gres <- subset(has_degree, !is.na(has_degree$GRE_AW) & !is.na(has_degree$GRE_V) & !is.na(has_degree$GRE_Quant))
 no_gres <- subset(has_degree, is.na(has_degree$GRE_AW) & is.na(has_degree$GRE_V) & is.na(has_degree$GRE_Quant))
 all_three_gres$accept_01 <- ifelse(all_three_gres$decision=="Accepted", 1, 0)
-
+all_data <- rbind(all_three_gres, no_gres)
 
 
 
