@@ -1,0 +1,165 @@
+---
+title: "Graduate Admission Analytics"
+author: "Frimpong Atta Junior Osei & Ahmed Baruwa"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    code_folding: hide
+    df_print: paged
+    theme: united
+    highlight: tango
+    toc: true
+    toc_float: 
+      collapsed: true
+      smooth_scroll: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#install.packages("r package", repos = "http://cran.us.r-project.org")
+#library(tidyverse)
+#install.packages("plotly")
+#library(plotly)
+#install.packages("corrplot")
+#library(corrplot)
+#install.packages("caTools")
+#library(caTools)
+#library(randomForest)
+#library(modelr)
+#library(MASS)
+#library(dplyr)
+options(scipen = 100, max.print = 1e+06)
+```
+
+## Introduction
+
+Graduate School application can be a very tedious process. Most candidates prepare their credentials with a very little knowledge about the details of the process. Even the most qualified and confident applicants worry about getting into graduate school. Unfortunately, graduate school admissions statistics tend to be more difficult to find than undergraduate acceptance rates. For this project, our main focus will be predicting the probability of a student getting admitted to graduate schools based on the following factors.
+
+## Data
+
+This dataset contains information or criteria for determining Postgraduate Admissions from an Indian perspective. This data was created by Mohan S. Acharya and can be found on Kaggle. The dataset is inspired by the UCLA Graduate Dataset with the aim of helping students get shortlisted in universities with based on their application materials. The predicted output gives them a fair idea about their chances for a particular university. The dataset contains several parameters which are considered important during the application for Masters Programs.
+
+### Insights on Data
+These are the variables that affect the data: 
+-   GRE Scores ( out of 340 )
+-   TOEFL Scores ( out of 120 )
+-   University Rating ( out of 5 )
+-   Statement of Purpose and Letter of Recommendation Strength ( out of 5 )
+-   Undergraduate GPA ( out of 10 )
+-   Research Experience ( either 0 or 1 )
+-   Chance of Admit ( ranging from 0 to 1 )
+
+```{r}
+library(tidyverse)
+fpath <- "Admission_Predict_Ver1.1.csv"
+adm <- read.csv(fpath, sep=",", na.strings="") 
+adm <- subset(adm, select = -Serial.No. )
+names(adm) <- c("gre", "toefl","uni_rating",
+                 "sop","lor","gpa","research","admit")
+adm
+summary(adm)
+attach(adm)
+```
+
+## Questions
+
+Currently, it is totally understandable that the most critical factors to get into grad school, particularly for PhD programs depends on some or all the parameters mentioned earlier. Out of curiosity we plan to investigate the following questions:
+
+-   Is the reputation of your previous institution a strong factor? 
+
+-   Is research experience an important factor when thinking about getting into grad school? What would be the case for a fresh graduate with none? Can a catching Statement of Purpose (SOP) replace that?
+
+-   Does the time period of application influence chances of admission or not ?
+
+-   Does the size of the pool of applicants in a particular admission cycle reflect the overall acceptance rates ?
+
+## Visualization
+
+### Admission Chance Distribution
+
+```{r}
+ggplot(adm,aes(admit)) + 
+  geom_histogram(aes(fill=..count..),bins=40)
+```
+
+### Chance of admission by school rating
+
+```{r}
+ggplot(adm,aes(factor(uni_rating),
+    admit)) + geom_boxplot(aes(fill=uni_rating))
+```
+
+### GRE vs Research
+
+```{r}
+ggplot(adm, aes(gre, color=factor(research)))+
+  geom_density(alpha=0.5)+ggtitle("GRE vs Research Distribution")
+```
+
+### 3D Graph for chance of admission vs CGPA, TOEFL and GRE
+
+```{r}
+#install.packages("plotly")
+library(plotly)
+plot_ly(adm, x=~gre, y=~toefl, z=~gpa, color = ~admit, 
+        type="scatter3d", mode="markers") %>% 
+  layout(scene = list(xaxis = list(title = "GRE Score"),
+                      yaxis = list(title = "TOEFL Score"),
+                      zaxis = list(title = "CGPA")))
+```
+
+From the 3D graph, we could see that chance of admission is higher when the CGPA, TOEFL and GRE score is higher.
+
+### Correlation between variables
+
+```{r}
+library(corrplot)
+corrplot(cor(adm), method = "number")
+```
+
+The more extreme the correlation coefficient (the closer to -1 or 1), the stronger the relationship. The positive correlation implies that the two variables under consideration vary in the same direction, i.e., if a variable increases the other one increases and if one decreases the other one decreases as well.
+
+## Modeling
+
+### Data Preparation - Splitting Data
+
+```{r}
+library(caTools)
+set.seed(1)
+sample=sample.split(adm$admit,SplitRatio = 0.80)
+train_data=subset(adm,sample==TRUE)
+test_data=subset(adm,sample==FALSE)
+```
+
+### Random Forest
+
+```{r}
+#install.packages("randomForest")
+library(randomForest)
+rf_model <- randomForest(admit ~., data = train_data, importance=TRUE)
+rf_model
+importance(rf_model)
+```
+
+### Multiple Linear Regression
+
+Let's try to do linear regression modeling using admit as the target variable.
+
+```{r}
+#install.packages("modelr")
+library(modelr)
+model1 <- lm(admit ~., data=train_data)
+summary(model1)
+mae(model1, data = train_data)
+```
+
+## Analysis and Discussion
+
+### Interpretations
+
+-   The p-value of SOP and GPA are more than 0.05, making them
+-   insignificant variables. This means they have no influence on the chance of getting admitted.
+
+## Impact
+
+## Summary
